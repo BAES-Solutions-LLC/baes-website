@@ -1,12 +1,28 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "./ui/button";
-import { AlertTriangle, ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Menu } from "lucide-react";
 import { APP_LOGO } from "../const";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "./ui/sheet";
 
 interface NavBarProps {
     page: string;
 }
 export default function NavBar ({ page }: NavBarProps) {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const navItems = [
+      { href: "/", label: "Home" },
+      { href: "/about", label: "About" },
+      { href: "/advantages", label: "Advantages" },
+      { href: "/contact", label: "Contact" },
+      { href: "/partner-enquiry", label: "Partners" },
+    ];
 
     return (
         <div className="sticky top-0 z-50 bg-background">
@@ -29,31 +45,71 @@ export default function NavBar ({ page }: NavBarProps) {
               <img src={APP_LOGO} alt="BAES Solutions" className="h-32 w-auto overflow-hidden" />
               </div>
               <div className="hidden md:flex items-center gap-8">
-                <Link href="/">
-                  <span className="text-slate-300 hover:text-accent transition-colors cursor-pointer">Home</span>
-                </Link>
-                <Link href="/about">
-                  <span className="text-slate-300 hover:text-accent transition-colors cursor-pointer">About</span>
-                </Link>
-                <Link href="/advantages">
-                  <span className="text-slate-300 hover:text-accent transition-colors cursor-pointer">Advantages</span>
-                </Link>
-                <Link href="/contact">
-                  <span className="text-slate-300 hover:text-accent transition-colors cursor-pointer">Contact</span>
-                </Link>
-                <Link href="/partner-enquiry">
-                  <span className="text-slate-300 hover:text-accent transition-colors cursor-pointer">Partners</span>
-                </Link>
+                {navItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <span className="text-slate-300 hover:text-accent transition-colors cursor-pointer">
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </div>
+            <div className="flex items-center gap-4">
+              <Link href="/signup">
+                <Button variant="outline" className="hidden md:block bg-transparent border-accent text-accent hover:bg-accent hover:text-white">
+                  Sign Up
+                </Button>
+              </Link>
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden text-accent hover:text-accent/80"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Sheet */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="right" className="bg-primary text-primary-foreground border-l border-accent/30 w-[280px] sm:w-[320px]">
+          <SheetHeader className="border-b border-accent/20 pb-4">
+            <SheetTitle className="text-accent text-2xl font-bold">Navigation</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 mt-6">
+            {navItems.map((item, index) => (
+              <Link key={item.href} href={item.href}>
+                <div 
+                  className="text-slate-200 hover:text-accent hover:bg-accent/10 transition-all duration-200 cursor-pointer text-base font-medium px-4 py-3 rounded-md border border-transparent hover:border-accent/30"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </div>
+              </Link>
+            ))}
+            <div className="border-t border-accent/20 my-4"></div>
             <Link href="/signup">
-              <Button variant="outline" className="hidden md:block bg-transparent border-accent text-accent hover:bg-accent hover:text-white">
+              <Button 
+                variant="outline" 
+                className="w-full bg-accent/10 border-2 border-accent text-accent hover:bg-accent hover:text-white transition-all duration-200 font-semibold py-6 text-base"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Sign Up
               </Button>
             </Link>
           </div>
-        </div>
-      </nav>
+          <div className="absolute bottom-6 left-4 right-4">
+            <div className="flex items-center justify-center">
+              <img src={APP_LOGO} alt="BAES Solutions" className="h-20 w-auto opacity-50" />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
       {page !== "home" && (
         <header className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
