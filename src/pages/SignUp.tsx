@@ -131,6 +131,13 @@ export default function SignUp() {
       return;
     }
 
+    // Validate invitation token
+    if (!inviteToken) {
+      toast.error("Invalid or missing invitation token. Please use your unique invitation link.");
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -144,6 +151,7 @@ export default function SignUp() {
         mt5Accounts: validMt5Accounts,
         emailVerified: formData.emailVerified,
         phoneVerified: formData.phoneVerified,
+        inviteToken: inviteToken, // Include invitation token
       });
 
       if (response.success) {

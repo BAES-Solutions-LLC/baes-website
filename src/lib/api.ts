@@ -72,6 +72,7 @@ export interface SignUpData {
   mt5Accounts: MT5Account[];
   emailVerified: boolean;
   phoneVerified: boolean;
+  inviteToken: string; // Required invitation token
 }
 
 export interface SignUpResponse {
