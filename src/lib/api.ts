@@ -56,6 +56,12 @@ if (import.meta.env.DEV) {
   console.log(`[API] Backend API configured at: ${API_BASE_URL}`);
 }
 
+export interface MT5Account {
+  mt5Login: string;
+  mt5Password: string;
+  mt5Server: string;
+}
+
 export interface SignUpData {
   fullName: string;
   email: string;
@@ -63,9 +69,7 @@ export interface SignUpData {
   investmentAmount: string;
   profitSharing?: string;
   country: string;
-  mt5Login: string;
-  mt5Password: string;
-  mt5Server: string;
+  mt5Accounts: MT5Account[];
   emailVerified: boolean;
   phoneVerified: boolean;
 }

@@ -26,7 +26,7 @@ export default function Home() {
             Advanced SaaS platform for automated gold trading. Sophisticated algorithms targeting 2-5% monthly ROI 
             with strict risk management. Technology-driven precision for serious investors.
           </p>
-          <Link href="/signup">
+          <Link href="/contact">
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-accent to-[oklch(0.75_0.20_135)] text-white font-bold text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all"

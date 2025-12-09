@@ -1,5 +1,5 @@
 import { APP_LOGO } from "@/const";
-import { UserPlus, Shield, DollarSign, Calendar, TrendingUp, CheckCircle2 } from "lucide-react";
+import { UserPlus, Shield, DollarSign, Calendar, TrendingUp, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,12 +37,13 @@ export default function SignUp() {
     investmentAmount: "100000",
     profitSharing: "",
     country: "",
-    mt5Login: "",
-    mt5Password: "",
-    mt5Server: "",
     agreeToTerms: false,
     understandRisks: false
   });
+
+  const [mt5Accounts, setMt5Accounts] = useState([
+    { mt5Login: "", mt5Password: "", mt5Server: "" }
+  ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -123,6 +124,13 @@ export default function SignUp() {
       return;
     }
 
+    // Validate MT5 accounts
+    const validMt5Accounts = mt5Accounts.filter(acc => acc.mt5Login && acc.mt5Password && acc.mt5Server);
+    if (validMt5Accounts.length === 0) {
+      toast.error("Please add at least one complete MT5 account");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -133,9 +141,7 @@ export default function SignUp() {
         investmentAmount: formData.investmentAmount,
         profitSharing: formData.profitSharing || undefined,
         country: formData.country,
-        mt5Login: formData.mt5Login,
-        mt5Password: formData.mt5Password,
-        mt5Server: formData.mt5Server,
+        mt5Accounts: validMt5Accounts,
         emailVerified: formData.emailVerified,
         phoneVerified: formData.phoneVerified,
       });
@@ -163,12 +169,10 @@ export default function SignUp() {
           investmentAmount: "100000",
           profitSharing: "",
           country: "",
-          mt5Login: "",
-          mt5Password: "",
-          mt5Server: "",
           agreeToTerms: false,
           understandRisks: false
         });
+        setMt5Accounts([{ mt5Login: "", mt5Password: "", mt5Server: "" }]);
         setEmailOtpSent(false);
         setPhoneOtpSent(false);
         setInviteToken(null);
@@ -191,6 +195,22 @@ export default function SignUp() {
       ...formData,
       [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
     });
+  };
+
+  const handleMt5Change = (index: number, field: string, value: string) => {
+    const updatedAccounts = [...mt5Accounts];
+    updatedAccounts[index] = { ...updatedAccounts[index], [field]: value };
+    setMt5Accounts(updatedAccounts);
+  };
+
+  const addMt5Account = () => {
+    setMt5Accounts([...mt5Accounts, { mt5Login: "", mt5Password: "", mt5Server: "" }]);
+  };
+
+  const removeMt5Account = (index: number) => {
+    if (mt5Accounts.length > 1) {
+      setMt5Accounts(mt5Accounts.filter((_, i) => i !== index));
+    }
   };
 
   const sendEmailOtp = async () => {
@@ -771,47 +791,79 @@ export default function SignUp() {
                     )}
                   </div>
 
-                  <div>
-                    <Label htmlFor="mt5Login">MT5 Login *</Label>
-                    <Input
-                      id="mt5Login"
-                      name="mt5Login"
-                      type="text"
-                      required
-                      value={formData.mt5Login}
-                      onChange={handleChange}
-                      placeholder="MT5 Account Number"
-                      className="mt-2"
-                    />
-                  </div>
+                </div>
 
-                  <div>
-                    <Label htmlFor="mt5Password">MT5 Password *</Label>
-                    <Input
-                      id="mt5Password"
-                      name="mt5Password"
-                      type="password"
-                      required
-                      value={formData.mt5Password}
-                      onChange={handleChange}
-                      placeholder="MT5 Password"
-                      className="mt-2"
-                    />
+                {/* MT5 Accounts Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">MT5 Accounts *</Label>
+                    <Button
+                      type="button"
+                      onClick={addMt5Account}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add MT5 Account
+                    </Button>
                   </div>
-
-                  <div>
-                    <Label htmlFor="mt5Server">MT5 Server *</Label>
-                    <Input
-                      id="mt5Server"
-                      name="mt5Server"
-                      type="text"
-                      required
-                      value={formData.mt5Server}
-                      onChange={handleChange}
-                      placeholder="MT5 Server Name"
-                      className="mt-2"
-                    />
-                  </div>
+                  
+                  {mt5Accounts.map((account, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium">MT5 Account {index + 1}</h4>
+                        {mt5Accounts.length > 1 && (
+                          <Button
+                            type="button"
+                            onClick={() => removeMt5Account(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor={`mt5Login-${index}`}>MT5 Login *</Label>
+                          <Input
+                            id={`mt5Login-${index}`}
+                            type="text"
+                            required
+                            value={account.mt5Login}
+                            onChange={(e) => handleMt5Change(index, 'mt5Login', e.target.value)}
+                            placeholder="MT5 Account Number"
+                            className="mt-2"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`mt5Password-${index}`}>MT5 Password *</Label>
+                          <Input
+                            id={`mt5Password-${index}`}
+                            type="password"
+                            required
+                            value={account.mt5Password}
+                            onChange={(e) => handleMt5Change(index, 'mt5Password', e.target.value)}
+                            placeholder="MT5 Password"
+                            className="mt-2"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`mt5Server-${index}`}>MT5 Server *</Label>
+                          <Input
+                            id={`mt5Server-${index}`}
+                            type="text"
+                            required
+                            value={account.mt5Server}
+                            onChange={(e) => handleMt5Change(index, 'mt5Server', e.target.value)}
+                            placeholder="MT5 Server Name"
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
 
                 <div className="bg-muted/50 border border-border rounded-lg p-4">
