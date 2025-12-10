@@ -307,26 +307,9 @@ export default function SignUp() {
           }
         }
 
-        toast.success(response.message || "Registration submitted successfully! Our team will contact you shortly.");
-        setFormData({
-          fullName: "",
-          email: "",
-          emailVerified: false,
-          emailOtp: "",
-          phone: "",
-          phoneVerified: false,
-          phoneOtp: "",
-          investmentAmount: "100000",
-          profitSharing: "",
-          country: "",
-          agreeToTerms: false,
-          understandRisks: false
-        });
-        setMt5Accounts([{ mt5Login: "", mt5Password: "", mt5Server: "", validated: false, validating: false }]);
-        setEmailOtpSent(false);
-        setPhoneOtpSent(false);
-        setInviteToken(null);
-        setProfitSharing("");
+        // Redirect to thank you page with user's name
+        const userName = encodeURIComponent(formData.fullName);
+        window.location.href = `/thank-you?name=${userName}`;
       } else {
         toast.error(response.error || "Failed to submit registration");
       }

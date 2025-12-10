@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import React from "react";
 import Contact from "./pages/Contact";
 import SignUp from "./pages/SignUp";
+import ThankYou from "./pages/ThankYou";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import KycAmlPolicy from "./pages/KycAmlPolicy";
 import SaasAgreement from "./pages/SaasAgreement";
@@ -23,6 +24,7 @@ function Router() {
 
       <Route path={"/contact"} component={Contact} />
       <Route path={"/signup"} component={SignUp} />
+      <Route path={"/thank-you"} component={ThankYou} />
       <Route path={"/privacy-policy"} component={PrivacyPolicy} />
       <Route path={"/kyc-aml-policy"} component={KycAmlPolicy} />
       <Route path={"/saas-agreement"} component={SaasAgreement} />
