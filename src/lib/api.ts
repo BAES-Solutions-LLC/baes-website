@@ -91,6 +91,32 @@ export const signUp = async (data: SignUpData): Promise<SignUpResponse> => {
   return response.data;
 };
 
+export interface ValidateMT5Response {
+  success: boolean;
+  message: string;
+  data?: {
+    validationId: string;
+    isValidated: boolean;
+    expiresAt: string;
+  };
+  error?: string;
+}
+
+export const validateMT5Credentials = async (
+  email: string,
+  mt5Login: string,
+  mt5Password: string,
+  mt5Server: string
+): Promise<ValidateMT5Response> => {
+  const response = await api.post<ValidateMT5Response>('/api/validate-mt5-credentials', {
+    email,
+    mt5Login,
+    mt5Password,
+    mt5Server,
+  });
+  return response.data;
+};
+
 export interface SendOtpResponse {
   success: boolean;
   message: string;

@@ -1,5 +1,5 @@
 import { APP_LOGO } from "@/const";
-import { UserPlus, Shield, DollarSign, Calendar, TrendingUp, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { UserPlus, Shield, DollarSign, Calendar, TrendingUp, CheckCircle2, Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import Disclaimer from "@/components/Disclaimer";
 import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
-import { signUp, sendEmailOtp as sendEmailOtpApi, sendPhoneOtp as sendPhoneOtpApi, verifyOtp as verifyOtpApi, getInvite, useInvite } from "@/lib/api";
+import { signUp, sendEmailOtp as sendEmailOtpApi, sendPhoneOtp as sendPhoneOtpApi, verifyOtp as verifyOtpApi, getInvite, useInvite, validateMT5Credentials } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -134,7 +134,7 @@ export default function SignUp() {
   const [phoneCode, setPhoneCode] = useState("+971"); // Default to UAE
 
   const [mt5Accounts, setMt5Accounts] = useState([
-    { mt5Login: "", mt5Password: "", mt5Server: "" }
+    { mt5Login: "", mt5Password: "", mt5Server: "", validated: false, validating: false }
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -188,6 +188,49 @@ export default function SignUp() {
     }
   }, []);
 
+  const handleValidateMT5 = async (index: number) => {
+    const account = mt5Accounts[index];
+    
+    // Validate required fields
+    if (!formData.email) {
+      toast.error('Please enter your email first');
+      return;
+    }
+    
+    if (!account.mt5Login || !account.mt5Password || !account.mt5Server) {
+      toast.error('Please fill in all MT5 account fields');
+      return;
+    }
+
+    // Mark as validating
+    const updatedAccounts = [...mt5Accounts];
+    updatedAccounts[index] = { ...account, validating: true };
+    setMt5Accounts(updatedAccounts);
+
+    try {
+      const response = await validateMT5Credentials(
+        formData.email,
+        account.mt5Login,
+        account.mt5Password,
+        account.mt5Server
+      );
+
+      if (response.success) {
+        // Mark as validated and lock the fields
+        updatedAccounts[index] = { ...account, validated: true, validating: false };
+        setMt5Accounts(updatedAccounts);
+        toast.success('MT5 account validated successfully! Credentials are now locked.');
+      } else {
+        throw new Error(response.error || 'Validation failed');
+      }
+    } catch (error: any) {
+      console.error('MT5 validation error:', error);
+      updatedAccounts[index] = { ...account, validated: false, validating: false };
+      setMt5Accounts(updatedAccounts);
+      toast.error(error.response?.data?.error || error.message || 'Failed to validate MT5 credentials. Please check your login, password, and server.');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -220,6 +263,13 @@ export default function SignUp() {
     const validMt5Accounts = mt5Accounts.filter(acc => acc.mt5Login && acc.mt5Password && acc.mt5Server);
     if (validMt5Accounts.length === 0) {
       toast.error("Please add at least one complete MT5 account");
+      return;
+    }
+
+    // Check all MT5 accounts are validated
+    const unvalidatedAccounts = validMt5Accounts.filter(acc => !acc.validated);
+    if (unvalidatedAccounts.length > 0) {
+      toast.error("Please validate all MT5 accounts before submitting");
       return;
     }
 
@@ -272,7 +322,7 @@ export default function SignUp() {
           agreeToTerms: false,
           understandRisks: false
         });
-        setMt5Accounts([{ mt5Login: "", mt5Password: "", mt5Server: "" }]);
+        setMt5Accounts([{ mt5Login: "", mt5Password: "", mt5Server: "", validated: false, validating: false }]);
         setEmailOtpSent(false);
         setPhoneOtpSent(false);
         setInviteToken(null);
@@ -304,7 +354,7 @@ export default function SignUp() {
   };
 
   const addMt5Account = () => {
-    setMt5Accounts([...mt5Accounts, { mt5Login: "", mt5Password: "", mt5Server: "" }]);
+    setMt5Accounts([...mt5Accounts, { mt5Login: "", mt5Password: "", mt5Server: "", validated: false, validating: false }]);
   };
 
   const removeMt5Account = (index: number) => {
@@ -968,6 +1018,7 @@ export default function SignUp() {
                             onChange={(e) => handleMt5Change(index, 'mt5Login', e.target.value)}
                             placeholder="MT5 Account Number"
                             className="mt-2"
+                            disabled={account.validated}
                           />
                         </div>
                         <div>
@@ -980,6 +1031,7 @@ export default function SignUp() {
                             onChange={(e) => handleMt5Change(index, 'mt5Password', e.target.value)}
                             placeholder="MT5 Password"
                             className="mt-2"
+                            disabled={account.validated}
                           />
                         </div>
                         <div>
@@ -988,6 +1040,7 @@ export default function SignUp() {
                             value={account.mt5Server}
                             onValueChange={(value) => handleMt5Change(index, 'mt5Server', value)}
                             required
+                            disabled={account.validated}
                           >
                             <SelectTrigger className="mt-2">
                               <SelectValue placeholder="Select MT5 Server" />
@@ -1001,6 +1054,40 @@ export default function SignUp() {
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 mt-4">
+                        {account.validated ? (
+                          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-md">
+                            <CheckCircle2 className="h-5 w-5" />
+                            <span className="text-sm font-medium">Validated</span>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            onClick={() => handleValidateMT5(index)}
+                            disabled={account.validating || !account.mt5Login || !account.mt5Password || !account.mt5Server || !formData.email}
+                            variant="outline"
+                            className="flex items-center gap-2"
+                          >
+                            {account.validating ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Validating...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="h-4 w-4" />
+                                Validate Credentials
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        {!account.validated && (
+                          <p className="text-xs text-muted-foreground">
+                            Click validate to verify your MT5 credentials before submitting
+                          </p>
+                        )}
                       </div>
                     </Card>
                   ))}
