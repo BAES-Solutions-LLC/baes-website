@@ -108,12 +108,20 @@ export const validateMT5Credentials = async (
   mt5Password: string,
   mt5Server: string
 ): Promise<ValidateMT5Response> => {
-  const response = await api.post<ValidateMT5Response>('/api/validate-mt5-credentials', {
-    email,
-    mt5Login,
-    mt5Password,
-    mt5Server,
-  });
+  // Use a longer timeout for MT5 validation (2 minutes) because MetaAPI
+  // broker detection can take 60+ seconds
+  const response = await api.post<ValidateMT5Response>(
+    '/api/validate-mt5-credentials',
+    {
+      email,
+      mt5Login,
+      mt5Password,
+      mt5Server,
+    },
+    {
+      timeout: 120000, // 2 minutes timeout
+    }
+  );
   return response.data;
 };
 

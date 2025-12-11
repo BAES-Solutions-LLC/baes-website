@@ -207,6 +207,11 @@ export default function SignUp() {
     updatedAccounts[index] = { ...account, validating: true };
     setMt5Accounts(updatedAccounts);
 
+    // Show info toast about potential wait time
+    toast.info('Validating MT5 credentials... This may take up to 60 seconds for broker detection.', {
+      duration: 5000,
+    });
+
     try {
       const response = await validateMT5Credentials(
         formData.email,
@@ -227,7 +232,13 @@ export default function SignUp() {
       console.error('MT5 validation error:', error);
       updatedAccounts[index] = { ...account, validated: false, validating: false };
       setMt5Accounts(updatedAccounts);
-      toast.error(error.response?.data?.error || error.message || 'Failed to validate MT5 credentials. Please check your login, password, and server.');
+      
+      // Check if it's a timeout error
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        toast.error('Validation timed out. This may happen if the broker is slow to respond. Please try again.');
+      } else {
+        toast.error(error.response?.data?.error || error.message || 'Failed to validate MT5 credentials. Please check your login, password, and server.');
+      }
     }
   };
 
@@ -814,17 +825,17 @@ export default function SignUp() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        required
-                        value={formData.phone}
-                        onChange={handleChange}
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={handleChange}
                         placeholder="50 123 4567"
-                        disabled={formData.phoneVerified}
+                      disabled={formData.phoneVerified}
                         className="flex-1"
-                      />
+                    />
                     </div>
                     {!formData.phoneVerified ? (
                       <>
@@ -991,38 +1002,38 @@ export default function SignUp() {
                         )}
                       </div>
                       <div className="grid md:grid-cols-3 gap-4">
-                        <div>
+                  <div>
                           <Label htmlFor={`mt5Login-${index}`}>MT5 Login *</Label>
-                          <Input
+                    <Input
                             id={`mt5Login-${index}`}
-                            type="text"
-                            required
+                      type="text"
+                      required
                             value={account.mt5Login}
                             onChange={(e) => handleMt5Change(index, 'mt5Login', e.target.value)}
-                            placeholder="MT5 Account Number"
-                            className="mt-2"
+                      placeholder="MT5 Account Number"
+                      className="mt-2"
                             disabled={account.validated}
-                          />
-                        </div>
-                        <div>
+                    />
+                  </div>
+                  <div>
                           <Label htmlFor={`mt5Password-${index}`}>MT5 Password *</Label>
-                          <Input
+                    <Input
                             id={`mt5Password-${index}`}
-                            type="password"
-                            required
+                      type="password"
+                      required
                             value={account.mt5Password}
                             onChange={(e) => handleMt5Change(index, 'mt5Password', e.target.value)}
-                            placeholder="MT5 Password"
-                            className="mt-2"
+                      placeholder="MT5 Password"
+                      className="mt-2"
                             disabled={account.validated}
-                          />
-                        </div>
-                        <div>
+                    />
+                  </div>
+                  <div>
                           <Label htmlFor={`mt5Server-${index}`}>MT5 Server *</Label>
                           <Select
                             value={account.mt5Server}
                             onValueChange={(value) => handleMt5Change(index, 'mt5Server', value)}
-                            required
+                      required
                             disabled={account.validated}
                           >
                             <SelectTrigger className="mt-2">
@@ -1036,7 +1047,7 @@ export default function SignUp() {
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
+                  </div>
                       </div>
                       
                       <div className="flex items-center gap-3 mt-4">
@@ -1056,7 +1067,7 @@ export default function SignUp() {
                             {account.validating ? (
                               <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Validating...
+                                Validating... (up to 60s)
                               </>
                             ) : (
                               <>
@@ -1068,7 +1079,10 @@ export default function SignUp() {
                         )}
                         {!account.validated && (
                           <p className="text-xs text-muted-foreground">
-                            Click validate to verify your MT5 credentials before submitting
+                            {account.validating 
+                              ? 'Please wait... Broker detection in progress'
+                              : 'Click validate to verify your MT5 credentials before submitting'
+                            }
                           </p>
                         )}
                       </div>
